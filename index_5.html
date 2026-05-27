@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>🏓 Beer Pong</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #f4f6fb;
+  --surface: #ffffff;
+  --surface2: #eef1f8;
+  --border: #dde2ef;
+  --accent: #e8440a;
+  --accent2: #c43a08;
+  --blue: #2563eb;
+  --red: #dc2626;
+  --green: #16a34a;
+  --text: #1a1f36;
+  --muted: #7b8299;
+  --radius: 14px;
+  --ping: #0891b2;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { background: var(--bg); color: var(--text); font-family: 'Nunito', sans-serif; min-height: 100dvh; overflow-x: hidden; }
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(ellipse 60% 40% at 80% 0%, rgba(37,99,235,0.06) 0%, transparent 60%),
+              radial-gradient(ellipse 50% 30% at 10% 100%, rgba(232,68,10,0.05) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+#app { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding-bottom: 88px; }
+
+header { padding: 18px 20px 14px; border-bottom: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: space-between; }
+.logo { font-family: 'Black Ops One', sans-serif; font-size: 26px; letter-spacing: 1px; }
+.logo .ping { color: var(--ping); }
+.logo .pong { color: var(--accent); }
+.t-badge { font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; background: var(--surface2); border: 1px solid var(--border); padding: 4px 12px; border-radius: 20px; color: var(--muted); }
+
+.tabs { display: flex; gap: 3px; padding: 10px 12px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 20; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.tab { flex: 1; padding: 8px 2px; border: none; border-radius: 8px; background: transparent; color: var(--muted); font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 800; letter-spacing: 0.3px; cursor: pointer; transition: all .2s; }
+.tab.active { background: var(--accent); color: #fff; }
+
+.section { padding: 18px 14px; display: none; }
+.section.active { display: block; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.card-title { font-family: 'Black Ops One', sans-serif; font-size: 16px; color: var(--accent); letter-spacing: 1px; margin-bottom: 14px; }
+
+.btn { padding: 10px 18px; border: none; border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800; cursor: pointer; transition: all .15s; letter-spacing: 0.3px; }
+.btn:active { transform: scale(0.96); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent2); }
+.btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-ghost:hover { border-color: var(--accent); }
+.btn-full { width: 100%; padding: 14px; font-size: 15px; margin-top: 8px; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-danger { background: transparent; color: var(--red); border: 1px solid transparent; font-size: 16px; padding: 5px 9px; border-radius: 6px; }
+.btn-danger:hover { border-color: var(--red); background: rgba(220,38,38,0.08); }
+
+/* team slots */
+.team-builder { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.team-slot { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+.team-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.team-dot.t1 { background: var(--blue); }
+.team-dot.t2 { background: var(--red); }
+.team-dot.t3 { background: var(--green); }
+.team-slot-name { font-weight: 800; font-size: 13px; flex: 1; }
+.team-slot-players { font-size: 12px; color: var(--muted); }
+
+/* match card */
+.match-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; transition: border-color .2s; }
+.match-card.done { border-color: rgba(22,163,74,0.35); background: rgba(22,163,74,0.03); }
+.match-card.tiebreaker { border-color: rgba(232,68,10,0.3); background: rgba(232,68,10,0.02); }
+.match-card.final-card { border-color: rgba(37,99,235,0.35); background: rgba(37,99,235,0.02); }
+.match-card.final-card.done { border-color: rgba(37,99,235,0.5); background: rgba(37,99,235,0.04); }
+.match-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.match-label { font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+.match-label.tb-label { color: var(--accent); }
+.match-label.final-label { color: var(--blue); font-size: 12px; }
+.match-done-badge { font-size: 11px; font-weight: 800; color: var(--green); background: rgba(22,163,74,0.1); border: 1px solid rgba(22,163,74,0.25); padding: 2px 8px; border-radius: 10px; letter-spacing: 0.5px; }
+.match-teams-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; margin-bottom: 10px; }
+.match-team { text-align: center; }
+.match-team-name { font-weight: 800; font-size: 13px; line-height: 1.3; }
+.match-team-players { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.match-vs { font-family: 'Black Ops One', sans-serif; font-size: 18px; color: var(--accent); text-align: center; }
+.match-vs.final-vs { color: var(--blue); font-size: 22px; }
+
+/* phase divider */
+.phase-divider { display: flex; align-items: center; gap: 10px; margin: 16px 0 12px; }
+.phase-divider-line { flex: 1; height: 1px; background: var(--border); }
+.phase-divider-label { font-family: 'Black Ops One', sans-serif; font-size: 13px; letter-spacing: 1px; white-space: nowrap; }
+.phase-divider-label.tb { color: var(--accent); }
+.phase-divider-label.fin { color: var(--blue); }
+
+/* cups input */
+.cups-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; }
+.cup-input-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.cup-label { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.cup-input { width: 72px; text-align: center; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 4px; color: var(--text); font-family: 'Black Ops One', sans-serif; font-size: 22px; outline: none; transition: border-color .2s; }
+.cup-input:focus { border-color: var(--accent); }
+.cup-sep { font-size: 14px; color: var(--muted); font-weight: 800; text-align: center; }
+.save-match-btn { margin-top: 10px; width: 100%; }
+
+.match-result { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px; background: rgba(22,163,74,0.06); border-radius: 8px; font-weight: 800; font-size: 13px; }
+.result-winner { color: var(--green); }
+.result-score { color: var(--muted); font-size: 12px; }
+
+/* standings */
+.standings { width: 100%; border-collapse: collapse; }
+.standings th { font-size: 10px; color: var(--muted); font-weight: 800; letter-spacing: 1px; text-transform: uppercase; padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+.standings td { padding: 10px 8px; font-size: 13px; border-bottom: 1px solid var(--border); }
+.standings tr:last-child td { border-bottom: none; }
+.standings tr.rank-1 td { background: rgba(232,68,10,0.04); }
+.standings tr.rank-final td { background: rgba(37,99,235,0.04); }
+.s-rank { font-family: 'Black Ops One', sans-serif; font-size: 18px; color: var(--muted); width: 32px; }
+.s-team { font-weight: 800; }
+.s-w { color: var(--green); font-weight: 800; }
+.s-l { color: var(--red); }
+.s-cd { font-weight: 700; }
+.s-cd.pos { color: var(--green); }
+.s-cd.neg { color: var(--red); }
+
+/* history */
+.hist-tournament { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.hist-t-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; cursor: pointer; }
+.hist-t-title { font-family: 'Black Ops One', sans-serif; font-size: 15px; color: var(--accent); letter-spacing: 1px; }
+.hist-t-date { font-size: 11px; color: var(--muted); }
+.hist-t-winner { font-size: 12px; color: var(--green); font-weight: 800; margin-top: 2px; }
+.hist-collapse { color: var(--muted); font-size: 18px; transition: transform .2s; }
+.hist-collapse.open { transform: rotate(180deg); }
+.hist-matches { display: none; }
+.hist-matches.open { display: block; }
+.hist-match { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-top: 1px solid var(--border); font-size: 12px; }
+.hist-match-teams { flex: 1; }
+.hist-match-winner { color: var(--green); font-weight: 700; }
+.hist-match-loser { color: var(--muted); }
+.hist-match-score { font-family: 'Black Ops One', sans-serif; font-size: 14px; color: var(--text); }
+.hist-match.is-final .hist-match-winner { color: var(--blue); }
+.hist-phase-label { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); padding: 8px 0 4px; }
+
+/* all-time board */
+.all-time-row { display: flex; align-items: center; gap: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+.all-time-row.rank-1 { border-color: var(--accent); background: rgba(232,68,10,0.04); }
+.at-rank { font-family: 'Black Ops One', sans-serif; font-size: 22px; color: var(--muted); width: 30px; text-align: center; }
+.rank-1 .at-rank { color: var(--accent); }
+.at-name { flex: 1; font-weight: 800; font-size: 14px; }
+.at-stats { text-align: right; }
+
+/* banners */
+.active-banner { background: linear-gradient(135deg, rgba(37,99,235,0.07), rgba(232,68,10,0.04)); border: 1px solid rgba(37,99,235,0.2); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.active-banner-text { font-size: 13px; font-weight: 700; }
+.active-banner-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.champ-banner { background: linear-gradient(135deg, rgba(37,99,235,0.12), rgba(37,99,235,0.03)); border: 2px solid rgba(37,99,235,0.35); border-radius: var(--radius); padding: 20px; text-align: center; margin-bottom: 16px; }
+.champ-crown { font-size: 44px; display: block; margin-bottom: 6px; }
+.champ-name { font-family: 'Black Ops One', sans-serif; font-size: 30px; color: var(--blue); letter-spacing: 2px; }
+.champ-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+/* progress */
+.progress-wrap { margin-bottom: 14px; }
+.progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); font-weight: 700; margin-bottom: 5px; }
+.progress-bar { height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width .4s ease; }
+
+/* toast */
+.toast { position: fixed; bottom: 96px; left: 50%; transform: translateX(-50%) translateY(12px); background: var(--text); border: 1px solid var(--border); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; opacity: 0; transition: all .3s; z-index: 100; white-space: nowrap; pointer-events: none; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; width: 100%; max-width: 340px; transform: scale(0.94); transition: transform .2s; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+.modal-overlay.show .modal { transform: scale(1); }
+.modal h3 { font-family: 'Black Ops One', sans-serif; font-size: 20px; color: var(--accent); margin-bottom: 8px; letter-spacing: 1px; }
+.modal p { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+.modal-btns { display: flex; gap: 8px; }
+.modal-btns .btn { flex: 1; }
+
+.empty { text-align: center; padding: 36px 16px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+.empty .big { font-size: 42px; display: block; margin-bottom: 10px; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.fade-in { animation: fadeIn .3s ease forwards; }
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo"><span class="ping">BEER</span> <span class="pong">PONG</span></div>
+    <div class="t-badge" id="tBadge">No Tournament</div>
+  </header>
+  <nav class="tabs">
+    <button class="tab active" onclick="showTab('play',this)">🏓 Play</button>
+    <button class="tab" onclick="showTab('standings',this)">📊 Standings</button>
+    <button class="tab" onclick="showTab('history',this)">📋 History</button>
+    <button class="tab" onclick="showTab('board',this)">🏆 All-Time</button>
+  </nav>
+  <div class="section active" id="tab-play"><div id="playContent"></div></div>
+  <div class="section" id="tab-standings"><div id="standingsContent"></div></div>
+  <div class="section" id="tab-history"><div id="historyContent"></div></div>
+  <div class="section" id="tab-board"><div id="boardContent"></div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle"></h3>
+    <p id="modalBody"></p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="modalOk" onclick="modalConfirm()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  CONSTANTS
+// ══════════════════════════════════════════
+const PLAYERS = ['Maxi','Ju','Laura','Kunz','Flo','Celine'];
+const TEAM_COLORS = ['t1','t2','t3'];
+const TEAM_LABEL = ['Team Blue','Team Red','Team Green'];
+const TEAM_CSS_COLOR = ['var(--blue)','var(--red)','var(--green)'];
+
+// ══════════════════════════════════════════
+//  STATE
+// tournament shape:
+//   id, date, teams: [[p,p],[p,p],[p,p]]
+//   matches: [{tA,tB,cupsA,cupsB,winner}]  (3 group matches)
+//   tiebreaker: null | {tA,tB,cupsA,cupsB,winner}
+//   final: null | {tA,tB,cupsA,cupsB,winner}
+//   champion: null | teamIndex
+// ══════════════════════════════════════════
+let state = { tournaments: [], activeTournament: null };
+
+function save() { localStorage.setItem('beerpong3', JSON.stringify(state)); }
+function load() {
+  const raw = localStorage.getItem('beerpong3');
+  if (raw) try { state = { ...state, ...JSON.parse(raw) }; } catch(e) {}
+}
+
+// ══════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════
+let _tt;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(_tt); _tt = setTimeout(() => el.classList.remove('show'), 2400);
+}
+let _ma = null;
+function showModal(title, body, action, okLabel='Confirm') {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').textContent = body;
+  document.getElementById('modalOk').textContent = okLabel;
+  _ma = action;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); _ma = null; }
+function modalConfirm() { closeModal(); if (_ma) _ma(); }
+document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function fmtDate(iso) { return new Date(iso).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'}); }
+
+// ══════════════════════════════════════════
+//  COMBINATION LOGIC
+// ══════════════════════════════════════════
+function allSplits(players) {
+  const splits = [];
+  function gen(rem, teams) {
+    if (!rem.length) { splits.push(teams.map(t=>[...t])); return; }
+    const first = rem[0], rest = rem.slice(1);
+    for (let i = 0; i < rest.length; i++)
+      gen(rest.filter((_,j)=>j!==i), [...teams,[first,rest[i]]]);
+  }
+  gen(players, []);
+  return splits;
+}
+function splitKey(split) { return split.map(p=>p.slice().sort().join('+')).sort().join('|'); }
+function usedKeys() {
+  return new Set([
+    ...state.tournaments.map(t=>splitKey(t.teams)),
+    ...(state.activeTournament ? [splitKey(state.activeTournament.teams)] : [])
+  ]);
+}
+function getUnusedSplit() {
+  const all = allSplits(PLAYERS), used = usedKeys();
+  const unused = all.filter(s=>!used.has(splitKey(s)));
+  return unused.length ? unused[Math.floor(Math.random()*unused.length)]
+                       : all[Math.floor(Math.random()*all.length)];
+}
+
+// ══════════════════════════════════════════
+//  GROUP STANDINGS
+// ══════════════════════════════════════════
+const MATCHUPS = [[0,1],[0,2],[1,2]];
+
+function groupStandings(t) {
+  const stats = [0,1,2].map(i => ({ idx:i, players:t.teams[i], w:0, l:0, cd:0 }));
+  for (const m of t.matches) {
+    if (m.winner === null) continue;
+    const wi = m.winner, li = m.winner===m.tA ? m.tB : m.tA;
+    stats[wi].w++; stats[li].l++;
+    const wc = m.winner===m.tA ? m.cupsA : m.cupsB;
+    const lc = m.winner===m.tA ? m.cupsB : m.cupsA;
+    stats[wi].cd += wc - lc; stats[li].cd -= wc - lc;
+  }
+  stats.sort((a,b) => b.w - a.w || b.cd - a.cd);
+  return stats;
+}
+
+// Returns the group standings and the teams affected by a points tie at the final cut.
+// Points = wins. With 3 teams, the usual tie is all teams on 1 win each.
+function advancingTeams(t) {
+  const st = groupStandings(t);
+  return { first: st[0], second: st[1], third: st[2] };
+}
+
+function allGroupDone(t) { return t.matches.every(m=>m.winner!==null); }
+
+// A tiebreaker is needed only if a points tie makes it unclear who reaches the Final.
+// If #1 and #2 are tied but #3 is behind, both finalists are already known.
+function tiebreakerInfo(t) {
+  if (!allGroupDone(t)) return null;
+  const { first, second, third } = advancingTeams(t);
+
+  // All three tied on points: play an extra mini round robin to decide the top 2.
+  if (first.w === second.w && second.w === third.w) {
+    return {
+      mode: 'all',
+      label: 'Three-way points tie',
+      teams: [first.idx, second.idx, third.idx],
+      autoFinalist: null,
+      matchups: [[first.idx, second.idx], [first.idx, third.idx], [second.idx, third.idx]]
+    };
+  }
+
+  // Tie for the second final spot: #1 is already in the final, #2 and #3 play off.
+  if (second.w === third.w) {
+    return {
+      mode: 'spot',
+      label: 'Tie for the second final spot',
+      teams: [second.idx, third.idx],
+      autoFinalist: first.idx,
+      matchups: [[second.idx, third.idx]]
+    };
+  }
+
+  return null;
+}
+
+function ensureTiebreaker(t) {
+  const info = tiebreakerInfo(t);
+  if (!info) { t.tiebreaker = null; return null; }
+  const currentKey = t.tiebreaker?.matchups?.map(m=>m.join('-')).join('|');
+  const nextKey = info.matchups.map(m=>m.join('-')).join('|');
+  if (!t.tiebreaker || currentKey !== nextKey) {
+    t.tiebreaker = {
+      mode: info.mode,
+      autoFinalist: info.autoFinalist,
+      matchups: info.matchups,
+      matches: info.matchups.map(([a,b]) => ({tA:a,tB:b,cupsA:null,cupsB:null,winner:null}))
+    };
+  }
+  return t.tiebreaker;
+}
+
+function needsTiebreaker(t) { return !!tiebreakerInfo(t); }
+function tiebreakerDone(t) { return t.tiebreaker?.matches?.length && t.tiebreaker.matches.every(m=>m.winner !== null); }
+
+function tiebreakerStandings(t) {
+  const tb = t.tiebreaker;
+  if (!tb?.matches?.length) return [];
+  const teamSet = [...new Set(tb.matchups.flat())];
+  const stats = teamSet.map(i => ({ idx:i, players:t.teams[i], w:0, l:0, cd:0 }));
+  const byIdx = Object.fromEntries(stats.map(s => [s.idx, s]));
+  for (const m of tb.matches) {
+    if (m.winner === null) continue;
+    const loser = m.winner === m.tA ? m.tB : m.tA;
+    const wc = m.winner === m.tA ? m.cupsA : m.cupsB;
+    const lc = m.winner === m.tA ? m.cupsB : m.cupsA;
+    byIdx[m.winner].w++;
+    byIdx[loser].l++;
+    byIdx[m.winner].cd += wc - lc;
+    byIdx[loser].cd -= wc - lc;
+  }
+  stats.sort((a,b) => b.w - a.w || b.cd - a.cd);
+  return stats;
+}
+
+// After group phase / tiebreaker, who are the finalists?
+function finalists(t) {
+  const { first, second } = advancingTeams(t);
+  if (!needsTiebreaker(t)) return { teamA: first.idx, teamB: second.idx };
+  const tb = ensureTiebreaker(t);
+  if (!tiebreakerDone(t)) return null;
+
+  if (tb.mode === 'spot') {
+    return { teamA: tb.autoFinalist, teamB: tb.matches[0].winner };
+  }
+
+  const st = tiebreakerStandings(t);
+  return { teamA: st[0].idx, teamB: st[1].idx };
+}
+
+function finalReady(t) {
+  if (!allGroupDone(t)) return false;
+  if (needsTiebreaker(t)) {
+    ensureTiebreaker(t);
+    if (!tiebreakerDone(t)) return false;
+  }
+  return true;
+}
+function finalDone(t) { return t.final && t.final.winner !== null; }
+function tournamentComplete(t) { return finalDone(t); }
+
+function totalSteps(t) {
+  let n = 3;
+  if (needsTiebreaker(t)) n += tiebreakerInfo(t).matchups.length;
+  n++; // final
+  return n;
+}
+function completedSteps(t) {
+  let n = t.matches.filter(m=>m.winner!==null).length;
+  if (t.tiebreaker?.matches?.length) n += t.tiebreaker.matches.filter(m=>m.winner!==null).length;
+  if (t.final?.winner !== null) n++;
+  return n;
+}
+
+// ══════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════
+function showTab(name, btn) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  ({play:renderPlay,standings:renderStandings,history:renderHistory,board:renderBoard})[name]?.();
+}
+
+// ══════════════════════════════════════════
+//  CUP INPUT WIDGET (shared)
+// ══════════════════════════════════════════
+function cupInputHTML(idA, idB, labelA, labelB) {
+  return `<div class="cups-row">
+    <div class="cup-input-wrap">
+      <div class="cup-label">${labelA} cups left</div>
+      <input class="cup-input" type="number" min="0" max="10" id="${idA}" placeholder="0" inputmode="numeric"/>
+    </div>
+    <div class="cup-sep">🍺</div>
+    <div class="cup-input-wrap">
+      <div class="cup-label">${labelB} cups left</div>
+      <input class="cup-input" type="number" min="0" max="10" id="${idB}" placeholder="0" inputmode="numeric"/>
+    </div>
+  </div>`;
+}
+
+function matchResultHTML(winPlayers, winCups, loseCups) {
+  return `<div class="match-result">
+    <span class="result-winner">🏆 ${winPlayers.join(' & ')} won</span>
+    <span class="result-score">${winCups} – ${loseCups} cups left</span>
+  </div>`;
+}
+
+function matchTeamsRowHTML(tAidx, tBidx, t, finalStyle=false) {
+  const colorA = TEAM_CSS_COLOR[tAidx], colorB = TEAM_CSS_COLOR[tBidx];
+  return `<div class="match-teams-row">
+    <div class="match-team">
+      <div class="match-team-name" style="color:${colorA}">${TEAM_LABEL[tAidx]}</div>
+      <div class="match-team-players">${t.teams[tAidx].join(' & ')}</div>
+    </div>
+    <div class="match-vs${finalStyle?' final-vs':''}">VS</div>
+    <div class="match-team">
+      <div class="match-team-name" style="color:${colorB}">${TEAM_LABEL[tBidx]}</div>
+      <div class="match-team-players">${t.teams[tBidx].join(' & ')}</div>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════
+//  RENDER: PLAY TAB
+// ══════════════════════════════════════════
+function renderPlay() {
+  const el = document.getElementById('playContent');
+  const badge = document.getElementById('tBadge');
+  const t = state.activeTournament;
+
+  badge.textContent = t ? 'Tournament #'+(state.tournaments.length+1)
+                        : (state.tournaments.length>0 ? state.tournaments.length+' played' : 'No Tournament');
+
+  if (!t) {
+    const used = usedKeys().size, total = allSplits(PLAYERS).length;
+    el.innerHTML = `<div class="card fade-in">
+      <div class="card-title">🎲 New Tournament</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:14px">
+        3 teams of 2 play a round robin. The top 2 advance to the <strong style="color:var(--blue)">Final</strong>.
+        If teams are tied on points after the group phase, an extra <strong style="color:var(--accent)">Decider Round</strong> decides who reaches the Final.
+      </p>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px">
+        Combinations used: <strong style="color:var(--accent)">${used} / ${total}</strong>
+        ${used===total?' — <span style="color:var(--red)">All used! Repeating now.</span>':''}
+      </div>
+      <button class="btn btn-primary btn-full" onclick="startTournament()">🍺 Draw Teams & Start</button>
+    </div>`;
+    return;
+  }
+
+  const done = allGroupDone(t);
+  const steps = totalSteps(t), completed = completedSteps(t);
+  const tNum = state.tournaments.length + 1;
+
+  let html = `
+    <div class="active-banner fade-in">
+      <div>
+        <div class="active-banner-text">🏓 Tournament #${tNum} in progress</div>
+        <div class="active-banner-sub">${fmtDate(t.date)} · ${completed}/${steps} matches done</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="confirmAbort()">Abort</button>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Progress</span><span>${completed}/${steps}</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${Math.round(completed/steps*100)}%"></div></div>
+    </div>`;
+
+  // Teams summary
+  html += `<div class="card fade-in" style="animation-delay:.05s">
+    <div class="card-title">Teams</div>
+    <div class="team-builder">`;
+  t.teams.forEach((pair, i) => {
+    html += `<div class="team-slot"><div class="team-dot ${TEAM_COLORS[i]}"></div>
+      <div class="team-slot-name">${TEAM_LABEL[i]}</div>
+      <div class="team-slot-players">${pair.join(' & ')}</div></div>`;
+  });
+  html += `</div></div>`;
+
+  // ── GROUP PHASE ──
+  html += `<div class="card fade-in" style="animation-delay:.1s"><div class="card-title">Group Phase</div>`;
+  t.matches.forEach((m, mi) => {
+    const isDone = m.winner !== null;
+    html += `<div class="match-card${isDone?' done':''}">
+      <div class="match-header">
+        <span class="match-label">Match ${mi+1}</span>
+        ${isDone?'<span class="match-done-badge">✓ Done</span>':''}
+      </div>
+      ${matchTeamsRowHTML(m.tA, m.tB, t)}`;
+    if (isDone) {
+      const wp = t.teams[m.winner], wc = m.winner===m.tA?m.cupsA:m.cupsB, lc = m.winner===m.tA?m.cupsB:m.cupsA;
+      html += matchResultHTML(wp, wc, lc);
+      html += `<button class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%" onclick="editGroupMatch(${mi})">✏️ Edit</button>`;
+    } else {
+      html += cupInputHTML(`gA_${mi}`,`gB_${mi}`, TEAM_LABEL[m.tA], TEAM_LABEL[m.tB]);
+      html += `<button class="btn btn-primary save-match-btn" onclick="saveGroupMatch(${mi})">Save Result</button>`;
+    }
+    html += `</div>`;
+  });
+  html += `</div>`;
+
+  // ── TIEBREAKER ROUND (shown when points tie affects who reaches the Final) ──
+  if (done && needsTiebreaker(t)) {
+    const info = tiebreakerInfo(t);
+    const tb = ensureTiebreaker(t);
+    const tbDone = tiebreakerDone(t);
+    const names = info.teams.map(i => t.teams[i].join(' & ')).join(' · ');
+    const explanation = info.mode === 'all'
+      ? `All teams are tied on points after the group phase. Play this extra round; the best two teams reach the Final.`
+      : `${t.teams[info.autoFinalist].join(' & ')} are already in the Final. The tied teams play off for the second Final spot.`;
+
+    html += `<div class="phase-divider"><div class="phase-divider-line"></div><div class="phase-divider-label tb">⚡ DECIDER ROUND</div><div class="phase-divider-line"></div></div>`;
+    html += `<div class="card fade-in"><div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+      <strong style="color:var(--accent)">${info.label}</strong><br>${explanation}<br>
+      <span style="font-size:11px">Teams involved: ${names}</span>
+    </div>`;
+
+    tb.matches.forEach((m, ti) => {
+      const isDone = m.winner !== null;
+      html += `<div class="match-card tiebreaker${isDone?' done':''}">
+        <div class="match-header"><span class="match-label tb-label">⚡ Decider ${ti+1}</span>${isDone?'<span class="match-done-badge">✓ Done</span>':''}</div>
+        ${matchTeamsRowHTML(m.tA, m.tB, t)}`;
+      if (isDone) {
+        const wp = t.teams[m.winner], wc = m.winner===m.tA?m.cupsA:m.cupsB, lc = m.winner===m.tA?m.cupsB:m.cupsA;
+        html += matchResultHTML(wp, wc, lc);
+        html += `<button class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%" onclick="editTiebreaker(${ti})">✏️ Edit</button>`;
+      } else {
+        html += cupInputHTML(`tbA_${ti}`,`tbB_${ti}`, TEAM_LABEL[m.tA], TEAM_LABEL[m.tB]);
+        html += `<button class="btn btn-primary save-match-btn" onclick="saveTiebreaker(${ti})">Save Decider</button>`;
+      }
+      html += `</div>`;
+    });
+
+    if (tbDone) {
+      const st = tiebreakerStandings(t);
+      html += `<div style="margin-top:8px;font-size:12px;color:var(--muted)">
+        Finalists after decider: <strong style="color:var(--blue)">${t.teams[finalists(t).teamA].join(' & ')}</strong> and <strong style="color:var(--blue)">${t.teams[finalists(t).teamB].join(' & ')}</strong>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+
+  // ── FINAL (shown once group/tiebreaker done) ──
+  if (finalReady(t)) {
+    const fin = finalists(t);
+    const f = t.final;
+    const fDone = finalDone(t);
+    html += `<div class="phase-divider"><div class="phase-divider-line"></div><div class="phase-divider-label fin">🏆 FINAL</div><div class="phase-divider-line"></div></div>`;
+
+    if (fDone) {
+      const wp = t.teams[f.winner];
+      html += `<div class="champ-banner fade-in">
+        <span class="champ-crown">🏆</span>
+        <div class="champ-name">${wp.join(' & ')}</div>
+        <div class="champ-sub">Tournament #${tNum} Champions!</div>
+      </div>`;
+    }
+
+    html += `<div class="card fade-in"><div class="match-card final-card${fDone?' done':''}">
+      <div class="match-header"><span class="match-label final-label">🏆 Grand Final</span>${fDone?'<span class="match-done-badge">✓ Done</span>':''}</div>
+      ${matchTeamsRowHTML(fin.teamA, fin.teamB, t, true)}`;
+    if (fDone) {
+      const wp = t.teams[f.winner], wc = f.winner===f.tA?f.cupsA:f.cupsB, lc = f.winner===f.tA?f.cupsB:f.cupsA;
+      html += matchResultHTML(wp, wc, lc);
+      html += `<button class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%" onclick="editFinal()">✏️ Edit</button>`;
+    } else {
+      html += cupInputHTML('finA','finB', TEAM_LABEL[fin.teamA], TEAM_LABEL[fin.teamB]);
+      html += `<button class="btn btn-primary save-match-btn" onclick="saveFinal(${fin.teamA},${fin.teamB})">Save Final Result</button>`;
+    }
+    html += `</div></div>`;
+
+    if (fDone) {
+      html += `<button class="btn btn-primary btn-full fade-in" onclick="finishTournament()" style="margin-top:4px">✅ Finish & Save Tournament</button>`;
+    }
+  }
+
+  el.innerHTML = html;
+}
+
+// ══════════════════════════════════════════
+//  ACTIONS
+// ══════════════════════════════════════════
+function startTournament() {
+  const split = getUnusedSplit();
+  state.activeTournament = {
+    id: uid(), date: new Date().toISOString(), teams: split,
+    matches: MATCHUPS.map(([a,b]) => ({tA:a,tB:b,cupsA:null,cupsB:null,winner:null})),
+    tiebreaker: null, final: null, champion: null
+  };
+  save(); renderPlay(); toast('🎲 Teams drawn — let\'s go!');
+}
+
+function readCups(idA, idB) {
+  const a = parseInt(document.getElementById(idA)?.value);
+  const b = parseInt(document.getElementById(idB)?.value);
+  if (isNaN(a)||isNaN(b)||a<0||b<0||a>10||b>10) return null;
+  if (a===b) return 'draw';
+  return {a, b};
+}
+
+function saveGroupMatch(mi) {
+  const cups = readCups(`gA_${mi}`,`gB_${mi}`);
+  if (!cups) { toast('⚠️ Enter valid cup counts (0–10)!'); return; }
+  if (cups==='draw') { toast('⚠️ Cups must differ — no draws!'); return; }
+  const m = state.activeTournament.matches[mi];
+  m.cupsA = cups.a; m.cupsB = cups.b;
+  m.winner = cups.a > cups.b ? m.tA : m.tB;
+  save(); renderPlay();
+  toast(`🏆 ${state.activeTournament.teams[m.winner].join(' & ')} win match ${mi+1}!`);
+}
+
+function editGroupMatch(mi) {
+  const m = state.activeTournament.matches[mi];
+  m.winner = null; m.cupsA = null; m.cupsB = null;
+  // also reset tiebreaker/final if group result changes
+  state.activeTournament.tiebreaker = null;
+  state.activeTournament.final = null;
+  state.activeTournament.champion = null;
+  save(); renderPlay();
+}
+
+function saveTiebreaker(ti) {
+  const cups = readCups(`tbA_${ti}`,`tbB_${ti}`);
+  if (!cups) { toast('⚠️ Enter valid cup counts (0–10)!'); return; }
+  if (cups==='draw') { toast('⚠️ Cups must differ — no draws!'); return; }
+  const tb = ensureTiebreaker(state.activeTournament);
+  const m = tb.matches[ti];
+  const winner = cups.a > cups.b ? m.tA : m.tB;
+  m.cupsA = cups.a; m.cupsB = cups.b; m.winner = winner;
+  state.activeTournament.final = null;
+  state.activeTournament.champion = null;
+  save(); renderPlay();
+  toast(`⚡ ${state.activeTournament.teams[winner].join(' & ')} win the decider!`);
+}
+
+function editTiebreaker(ti) {
+  const tb = ensureTiebreaker(state.activeTournament);
+  if (tb?.matches?.[ti]) {
+    tb.matches[ti].winner = null;
+    tb.matches[ti].cupsA = null;
+    tb.matches[ti].cupsB = null;
+  }
+  state.activeTournament.final = null;
+  state.activeTournament.champion = null;
+  save(); renderPlay();
+}
+
+function saveFinal(tAidx, tBidx) {
+  const cups = readCups('finA','finB');
+  if (!cups) { toast('⚠️ Enter valid cup counts (0–10)!'); return; }
+  if (cups==='draw') { toast('⚠️ Cups must differ — no draws!'); return; }
+  const winner = cups.a > cups.b ? tAidx : tBidx;
+  state.activeTournament.final = { tA:tAidx, tB:tBidx, cupsA:cups.a, cupsB:cups.b, winner };
+  state.activeTournament.champion = winner;
+  save(); renderPlay();
+  toast(`🏆 ${state.activeTournament.teams[winner].join(' & ')} are Champions!`);
+}
+
+function editFinal() {
+  state.activeTournament.final = null;
+  state.activeTournament.champion = null;
+  save(); renderPlay();
+}
+
+function finishTournament() {
+  if (!tournamentComplete(state.activeTournament)) { toast('⚠️ Tournament not complete yet!'); return; }
+  state.tournaments.unshift(state.activeTournament);
+  state.activeTournament = null;
+  save(); renderPlay();
+  toast(`🎉 Tournament #${state.tournaments.length} saved!`);
+}
+
+function confirmAbort() {
+  showModal('Abort Tournament?', 'All current results will be lost.', () => {
+    state.activeTournament = null; save(); renderPlay(); toast('Tournament aborted');
+  }, 'Abort');
+}
+
+// ══════════════════════════════════════════
+//  RENDER: STANDINGS TAB
+// ══════════════════════════════════════════
+function renderStandings() {
+  const el = document.getElementById('standingsContent');
+  const t = state.activeTournament || (state.tournaments.length ? state.tournaments[0] : null);
+  if (!t) { el.innerHTML = '<div class="empty"><span class="big">📊</span>No tournament data yet.</div>'; return; }
+  const isActive = !!state.activeTournament;
+  const label = isActive ? 'Current Tournament' : 'Last Tournament';
+  const st = groupStandings(t);
+  const done = allGroupDone(t);
+  const fDone = finalDone(t);
+
+  let html = `<div class="card fade-in"><div class="card-title">${label} · Group Phase</div>`;
+
+  html += `<table class="standings"><thead><tr>
+    <th>#</th><th>Team</th><th>W</th><th>L</th><th>Cup Diff</th>
+  </tr></thead><tbody>`;
+  st.forEach((s, i) => {
+    const cd = s.cd;
+    const isTied = i<2 && st[0].w===st[1].w && st[0].cd===st[1].cd;
+    html += `<tr class="${i===0?'rank-1':i===1?'rank-final':''}">
+      <td class="s-rank">${i===0?'1':i===1?'2':'3'}${isTied&&i<2?' <span style="color:var(--accent);font-size:10px">TIE</span>':''}</td>
+      <td class="s-team"><div style="font-weight:800">${s.players.join(' & ')}</div><div style="font-size:11px;color:var(--muted)">${TEAM_LABEL[s.idx]}</div></td>
+      <td class="s-w">${s.w}</td><td class="s-l">${s.l}</td>
+      <td class="s-cd ${cd>0?'pos':cd<0?'neg':''}">${cd>0?'+':''}${cd}</td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+
+  // Match results so far
+  const dm = t.matches.filter(m=>m.winner!==null);
+  if (dm.length) {
+    html += `<div style="margin-top:12px">`;
+    dm.forEach(m => {
+      const wp=t.teams[m.winner], lp=t.teams[m.winner===m.tA?m.tB:m.tA];
+      const wc=m.winner===m.tA?m.cupsA:m.cupsB, lc=m.winner===m.tA?m.cupsB:m.cupsA;
+      html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-top:1px solid var(--border);font-size:12px">
+        <div><span style="color:var(--green);font-weight:700">🏆 ${wp.join(' & ')}</span><span style="color:var(--muted)"> vs ${lp.join(' & ')}</span></div>
+        <div style="font-family:'Black Ops One',sans-serif;font-size:14px">${wc}–${lc}</div></div>`;
+    });
+    html += `</div>`;
+  }
+  html += `</div>`;
+
+  // Decider round result
+  if (done && needsTiebreaker(t)) {
+    const tb = ensureTiebreaker(t);
+    html += `<div class="card fade-in"><div class="card-title" style="color:var(--accent)">⚡ Decider Round</div>`;
+    tb.matches.forEach((m, i) => {
+      if (m.winner !== null) {
+        const wp=t.teams[m.winner], lp=t.teams[m.winner===m.tA?m.tB:m.tA];
+        const wc=m.winner===m.tA?m.cupsA:m.cupsB, lc=m.winner===m.tA?m.cupsB:m.cupsA;
+        html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-top:1px solid var(--border);font-size:12px">
+          <div><span style="color:var(--accent);font-weight:700">⚡ ${wp.join(' & ')}</span><span style="color:var(--muted)"> vs ${lp.join(' & ')}</span></div>
+          <div style="font-family:'Black Ops One',sans-serif;font-size:14px">${wc}–${lc}</div></div>`;
+      } else {
+        html += `<div style="font-size:13px;color:var(--muted);padding:6px 0">Decider ${i+1} pending…</div>`;
+      }
+    });
+    if (tiebreakerDone(t)) {
+      const fin = finalists(t);
+      html += `<div style="font-size:13px;font-weight:700;color:var(--blue);margin-top:10px">🏆 Finalists: ${t.teams[fin.teamA].join(' & ')} vs ${t.teams[fin.teamB].join(' & ')}</div>`;
+    }
+    html += `</div>`;
+  }
+
+  // Final result
+  if (finalReady(t)) {
+    const fin = finalists(t);
+    const f = t.final;
+    html += `<div class="card fade-in"><div class="card-title" style="color:var(--blue)">🏆 Final</div>`;
+    html += `<div style="font-size:13px;color:var(--muted);margin-bottom:10px">
+      <strong style="color:${TEAM_CSS_COLOR[fin.teamA]}">${t.teams[fin.teamA].join(' & ')}</strong> vs
+      <strong style="color:${TEAM_CSS_COLOR[fin.teamB]}">${t.teams[fin.teamB].join(' & ')}</strong>
+    </div>`;
+    if (fDone) {
+      const wp=t.teams[f.winner], wc=f.winner===f.tA?f.cupsA:f.cupsB, lc=f.winner===f.tA?f.cupsB:f.cupsA;
+      html += `<div style="font-family:'Black Ops One',sans-serif;font-size:20px;color:var(--blue)">🏆 ${wp.join(' & ')}</div>`;
+      html += `<div style="font-size:12px;color:var(--muted);margin-top:4px">Final score: ${wc} – ${lc}</div>`;
+    } else {
+      html += `<div style="font-size:13px;color:var(--muted)">Pending…</div>`;
+    }
+    html += `</div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+// ══════════════════════════════════════════
+//  RENDER: HISTORY TAB
+// ══════════════════════════════════════════
+function renderHistory() {
+  const el = document.getElementById('historyContent');
+  if (!state.tournaments.length) { el.innerHTML = '<div class="empty"><span class="big">📋</span>No completed tournaments yet.</div>'; return; }
+  let html = '';
+  state.tournaments.forEach((t, ti) => {
+    const champ = t.teams[t.champion];
+    const tNum = state.tournaments.length - ti;
+    const colId = 'hist_'+t.id;
+    html += `<div class="hist-tournament fade-in" style="animation-delay:${ti*0.05}s">
+      <div class="hist-t-header" onclick="toggleHist('${colId}')">
+        <div>
+          <div class="hist-t-title">Tournament #${tNum}</div>
+          <div class="hist-t-date">${fmtDate(t.date)}</div>
+          <div class="hist-t-winner">🏆 ${champ.join(' & ')}</div>
+        </div>
+        <div class="hist-collapse" id="arr_${colId}">▼</div>
+      </div>
+      <div class="hist-matches" id="${colId}">`;
+
+    // Teams
+    html += `<div style="display:flex;gap:6px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--border)">`;
+    t.teams.forEach((pair, i) => {
+      html += `<span style="font-size:11px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-weight:700;color:${TEAM_CSS_COLOR[i]}">${pair.join(' & ')}</span>`;
+    });
+    html += `</div>`;
+
+    // Group matches
+    html += `<div class="hist-phase-label">Group Phase</div>`;
+    t.matches.forEach(m => {
+      if (m.winner===null) return;
+      const wp=t.teams[m.winner], lp=t.teams[m.winner===m.tA?m.tB:m.tA];
+      const wc=m.winner===m.tA?m.cupsA:m.cupsB, lc=m.winner===m.tA?m.cupsB:m.cupsA;
+      html += `<div class="hist-match">
+        <div class="hist-match-teams"><div class="hist-match-winner">🏆 ${wp.join(' & ')}</div><div class="hist-match-loser">vs ${lp.join(' & ')}</div></div>
+        <div class="hist-match-score">${wc}–${lc}</div></div>`;
+    });
+
+    // Decider round
+    if (t.tiebreaker?.matches?.length) {
+      html += `<div class="hist-phase-label">⚡ Decider Round</div>`;
+      t.tiebreaker.matches.forEach(tb => {
+        if (tb.winner===null) return;
+        const wp=t.teams[tb.winner], lp=t.teams[tb.winner===tb.tA?tb.tB:tb.tA];
+        const wc=tb.winner===tb.tA?tb.cupsA:tb.cupsB, lc=tb.winner===tb.tA?tb.cupsB:tb.cupsA;
+        html += `<div class="hist-match">
+          <div class="hist-match-teams"><div class="hist-match-winner" style="color:var(--accent)">⚡ ${wp.join(' & ')}</div><div class="hist-match-loser">vs ${lp.join(' & ')}</div></div>
+          <div class="hist-match-score">${wc}–${lc}</div></div>`;
+      });
+    }
+
+    // Final
+    if (t.final?.winner !== null && t.final?.winner !== undefined) {
+      const f=t.final, wp=t.teams[f.winner], lp=t.teams[f.winner===f.tA?f.tB:f.tA];
+      const wc=f.winner===f.tA?f.cupsA:f.cupsB, lc=f.winner===f.tA?f.cupsB:f.cupsA;
+      html += `<div class="hist-phase-label">🏆 Final</div>`;
+      html += `<div class="hist-match is-final">
+        <div class="hist-match-teams"><div class="hist-match-winner" style="color:var(--blue)">🏆 ${wp.join(' & ')}</div><div class="hist-match-loser">vs ${lp.join(' & ')}</div></div>
+        <div class="hist-match-score">${wc}–${lc}</div></div>`;
+    }
+
+    // Group standings mini
+    const st = groupStandings(t);
+    html += `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+      <table class="standings"><thead><tr><th>#</th><th>Team</th><th>W</th><th>L</th><th>CD</th></tr></thead><tbody>`;
+    st.forEach((s, i) => {
+      const cd=s.cd;
+      html += `<tr class="${i===0?'rank-1':''}"><td class="s-rank">${i===0?'🥇':i===1?'🥈':'🥉'}</td>
+        <td class="s-team" style="font-size:12px">${s.players.join(' & ')}</td>
+        <td class="s-w">${s.w}</td><td class="s-l">${s.l}</td>
+        <td class="s-cd ${cd>0?'pos':cd<0?'neg':''}">${cd>0?'+':''}${cd}</td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+    html += `</div></div>`;
+  });
+  el.innerHTML = html;
+}
+
+function toggleHist(id) {
+  document.getElementById(id).classList.toggle('open');
+  document.getElementById('arr_'+id).classList.toggle('open');
+}
+
+// ══════════════════════════════════════════
+//  RENDER: ALL-TIME BOARD
+// ══════════════════════════════════════════
+function renderBoard() {
+  const el = document.getElementById('boardContent');
+  if (!state.tournaments.length) { el.innerHTML = '<div class="empty"><span class="big">🏆</span>No completed tournaments yet.</div>'; return; }
+
+  // Championships won
+  const champWins = {};
+  PLAYERS.forEach(p => champWins[p] = 0);
+  for (const t of state.tournaments) {
+    if (t.champion !== null) {
+      t.teams[t.champion].forEach(p => champWins[p]++);
+    }
+  }
+
+  // Pair stats (group + final wins)
+  const pairStats = {};
+  function pairKey(ps) { return ps.slice().sort().join(' & '); }
+  for (const t of state.tournaments) {
+    const st = groupStandings(t);
+    for (const s of st) {
+      const key = pairKey(s.players);
+      if (!pairStats[key]) pairStats[key] = { name:s.players.join(' & '), w:0, l:0, cd:0, finals:0, titles:0 };
+      pairStats[key].w += s.w; pairStats[key].l += s.l; pairStats[key].cd += s.cd;
+      // reached final?
+      const fin = finalists(t);
+      if (fin && (s.idx===fin.teamA||s.idx===fin.teamB)) pairStats[key].finals++;
+      // won title?
+      if (s.idx===t.champion) pairStats[key].titles++;
+    }
+  }
+  const rows = Object.values(pairStats).sort((a,b)=>b.titles-a.titles||b.w-a.w||b.cd-a.cd);
+
+  let html = `<div class="card fade-in">
+    <div class="card-title">🏆 Tournament Champions</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px">${state.tournaments.length} tournament${state.tournaments.length>1?'s':''} completed</div>`;
+  rows.forEach((r, i) => {
+    const total=r.w+r.l, pct=total>0?Math.round(r.w/total*100):0, cd=r.cd;
+    html += `<div class="all-time-row ${i===0?'rank-1':''} fade-in" style="animation-delay:${i*0.04}s">
+      <div class="at-rank">${i===0?'🏆':i+1}</div>
+      <div>
+        <div style="font-weight:800;font-size:14px">${r.name}</div>
+        <div style="font-size:11px;color:var(--muted)">🏆 ${r.titles} title${r.titles!==1?'s':''} · ${r.finals} final${r.finals!==1?'s':''}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:13px"><span style="color:var(--green);font-weight:800">${r.w}W</span> <span style="color:var(--red)">${r.l}L</span> <span style="color:var(--muted);font-size:11px">${pct}%</span></div>
+        <div style="font-size:11px;color:${cd>0?'var(--green)':cd<0?'var(--red)':'var(--muted)'}">${cd>0?'+':''}${cd} cups</div>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Individual player stats
+  const playerStats = {};
+  PLAYERS.forEach(p => playerStats[p] = {w:0,l:0,titles:0});
+  for (const t of state.tournaments) {
+    const st = groupStandings(t);
+    for (const s of st) {
+      s.players.forEach(p => { playerStats[p].w+=s.w; playerStats[p].l+=s.l; });
+    }
+    if (t.champion!==null) t.teams[t.champion].forEach(p=>playerStats[p].titles++);
+  }
+  const pRows = Object.entries(playerStats).sort((a,b)=>b[1].titles-a[1].titles||b[1].w-a[1].w);
+
+  html += `<div class="card fade-in" style="animation-delay:.15s">
+    <div class="card-title">👤 Player Stats</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Group phase wins + titles won</div>`;
+  pRows.forEach(([name, s], i) => {
+    const total=s.w+s.l, pct=total>0?Math.round(s.w/total*100):0;
+    const barW=total>0?Math.round(s.w/total*100):0;
+    html += `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="font-weight:800;font-size:13px">${s.titles>0?'🏆 ':''}${name}${s.titles>0?` <span style="font-size:11px;color:var(--blue)">${s.titles}x champ</span>`:''}</span>
+        <span style="font-size:12px"><span style="color:var(--green)">${s.w}W</span> <span style="color:var(--red)">${s.l}L</span> <span style="color:var(--muted)">${pct}%</span></span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${barW}%;background:${i===0?'var(--accent)':'var(--blue)'}"></div></div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  el.innerHTML = html;
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+load();
+renderPlay();
+</script>
+</body>
+</html>
